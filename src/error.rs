@@ -16,6 +16,9 @@ pub enum ParserError {
 
     #[error("undefined macro name: {name}")]
     UndefinedMacroName { name: String },
+
+    #[error("empty application -- is there a '()' in your code?")]
+    EmptyApplication,
 }
 
 #[derive(Error, Debug)]

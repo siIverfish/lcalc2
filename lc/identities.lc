@@ -30,4 +30,4 @@ Y := λ(λ1 1)(λ2(1 1))
 # -> F I (PLACEBO)(DEBUG)
 # -> (PLACEBO)(DEBUG)
 
-T T F T F T F T F T F DEBUG PLACEBO
+(T (T (T T F) F) F) DEBUG PLACEBO

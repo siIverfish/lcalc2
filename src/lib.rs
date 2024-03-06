@@ -7,18 +7,10 @@ pub mod macros;
 pub mod preprocessor;
 pub mod spec;
 
-pub mod application;
 pub mod ds;
 pub mod parens;
-pub mod remove_group;
 
 pub mod run;
-
-// TODO: Vec<Option<Token>> for less copying
-//       then flatten at the end?
-
-// TODO: error system improvement -- stop bubbling Err(())s
-// (pest would do this automatically)
 
 // TODO: HashMap or BTreeMap?
 
@@ -29,9 +21,7 @@ use error::{Error, ParserError};
 use macros::parse_macros;
 use preprocessor::preprocess;
 
-use application::parse_application;
 use parens::parse_parens;
-use remove_group::parse_remove_group;
 
 use run::evaluate;
 
@@ -55,9 +45,7 @@ pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token
 pub fn parse_iter(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
 
     // TODO refactor parse_parens to work on tokens like others
-    let mut output = parse_parens(definitions, iter)?;
-    parse_application(&mut output);
-    let output = parse_remove_group(output);
+    let output = parse_parens(definitions, iter)?;
     let output = parse_macros(definitions, output)?;
 
     Ok(output)

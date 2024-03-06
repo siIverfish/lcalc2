@@ -8,6 +8,16 @@ use crate::spec::RESERVED;
 
 use crate::parse_iter;
 
+pub fn parse_applications(tokens: &mut Vec<Token>) -> Option<Token> {
+    let argument = tokens.pop()?;
+
+    parse_applications(tokens)
+        .map(
+            |predicate| Token::Application(Box::new([predicate, argument.clone()])
+        ))
+        .or(Some(argument))
+}
+
 pub fn parse_parens(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
     match iter.next() {
         // skip whitespace
@@ -17,15 +27,19 @@ pub fn parse_parens(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<C
         // open parentheses: build out token group
         Some('(') => {
             let mut tokens: Vec<Token> = Vec::new();
-            loop {
+            let mut tokens = loop {
                 match parse_parens(definitions, iter) {
                     Ok(token) => tokens.push(token),
                     // close the parentheses
-                    Err(ParserError::ClosedParentheses) => return Ok(Token::Group(tokens)),
+                    Err(ParserError::ClosedParentheses) => break tokens,
                     // propagate other errors
                     Err(other_error) => Err(other_error)?,
                 }
-            }
+            };
+
+            println!("tokens (open parentheses): {tokens:?}");
+
+            parse_applications(&mut tokens).ok_or(ParserError::EmptyApplication)
         }
 
         // close an open token group
