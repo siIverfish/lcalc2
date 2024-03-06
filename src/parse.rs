@@ -6,8 +6,6 @@ use crate::ds::Token;
 use crate::error::ParserError;
 use crate::spec::RESERVED;
 
-use crate::parse_iter;
-
 pub fn parse_applications(tokens: &mut Vec<Token>) -> Option<Token> {
     let argument = tokens.pop()?;
 
@@ -18,17 +16,17 @@ pub fn parse_applications(tokens: &mut Vec<Token>) -> Option<Token> {
         .or(Some(argument))
 }
 
-pub fn parse_parens(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
+pub fn parse_iter(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
     match iter.next() {
         // skip whitespace
         // hopefully the recursion gets optimized out
-        Some(x) if x.is_whitespace() => parse_parens(definitions, iter),
+        Some(x) if x.is_whitespace() => parse_iter(definitions, iter),
 
         // open parentheses: build out token group
         Some('(') => {
             let mut tokens: Vec<Token> = Vec::new();
             let mut tokens = loop {
-                match parse_parens(definitions, iter) {
+                match parse_iter(definitions, iter) {
                     Ok(token) => tokens.push(token),
                     // close the parentheses
                     Err(ParserError::ClosedParentheses) => break tokens,
@@ -56,17 +54,19 @@ pub fn parse_parens(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<C
 
         // construct MacroName / Name out of character
         Some(x) => Ok({
-            let mut token: String = x.into();
+            let mut name: String = x.into();
 
             while let Some(next_char) = iter.peek().filter(|c| !RESERVED.contains(**c)) {
-                token.push(*next_char);
+                name.push(*next_char);
                 iter.next();
             }
 
-            if let Ok(num) = str::parse::<u32>(&token) {
+            if let Ok(num) = str::parse::<u32>(&name) {
                 Token::Name(num)
             } else {
-                Token::MacroName(token)
+                definitions.get(&name)
+                    .ok_or(ParserError::UndefinedMacroName { name })?
+                    .clone()
             }
         }),
 

@@ -3,12 +3,11 @@
 #![feature(box_patterns)]
 
 pub mod error;
-pub mod macros;
 pub mod preprocessor;
 pub mod spec;
 
 pub mod ds;
-pub mod parens;
+pub mod parse;
 
 pub mod run;
 
@@ -18,10 +17,9 @@ use std::{collections::BTreeMap, iter::Peekable, str::Chars};
 
 use ds::Token;
 use error::{Error, ParserError};
-use macros::parse_macros;
 use preprocessor::preprocess;
 
-use parens::parse_parens;
+use parse::parse_iter;
 
 use run::evaluate;
 
@@ -40,15 +38,6 @@ pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token
     let mut iter = input.chars().peekable();
 
     parse_iter(definitions, &mut iter)
-}
-
-pub fn parse_iter(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
-
-    // TODO refactor parse_parens to work on tokens like others
-    let output = parse_parens(definitions, iter)?;
-    let output = parse_macros(definitions, output)?;
-
-    Ok(output)
 }
 
 pub fn run(input: &str) -> Result<Token, Error> {
