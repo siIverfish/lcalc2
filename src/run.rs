@@ -49,9 +49,9 @@ pub fn evaluate_once(tree: Token) -> Result<Token, EvaluationError> {
             if let Token::Function(box new_expression) = function {
                 Ok(new_expression)
             } else {
-                Err(EvaluationError::NonFunctionPredicate { 
-                    predicate: function, 
-                    argument: argument 
+                Err(EvaluationError::NonFunctionPredicate {
+                    predicate: function,
+                    argument,
                 })
             }
         }

@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use crate::ds::Token;
-use crate::spec::{COMMENT_SYMBOL, MACRO_DELIMITER};
 use crate::error::ParserError;
 use crate::parse;
+use crate::spec::{COMMENT_SYMBOL, MACRO_DELIMITER};
 
 // TODO: validate names (no spaces, lambdas, can't start with number)
 

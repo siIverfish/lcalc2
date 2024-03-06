@@ -2,18 +2,16 @@
 
 #![feature(box_patterns)]
 
+pub mod error;
 pub mod macros;
 pub mod preprocessor;
 pub mod spec;
-pub mod error;
 
 pub mod application;
 pub mod ds;
 pub mod function;
-pub mod numbers;
 pub mod parens;
 pub mod remove_group;
-pub mod spaces;
 
 pub mod run;
 
@@ -27,25 +25,22 @@ pub mod run;
 
 use std::collections::BTreeMap;
 
-
 use ds::Token;
-use error::{ParserError, Error};
+use error::{Error, ParserError};
 use macros::parse_macros;
 use preprocessor::preprocess;
 
 use application::parse_application;
 use function::parse_functions;
-use numbers::parse_numbers;
 use parens::parse_parens;
 use remove_group::parse_remove_group;
-use spaces::parse_spaces;
 
 use run::evaluate;
 
 pub fn parse_file(input: &str) -> Result<Token, ParserError> {
     let (definitions, input) = preprocess(input)?;
 
-    Ok(parse(&definitions, &input)?)
+    parse(&definitions, &input)
 }
 
 pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token, ParserError> {
@@ -57,12 +52,10 @@ pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token
 
     // TODO refactor parse_parens to work on tokens like others
     let mut output = parse_parens(&mut iter)?;
-    parse_numbers(&mut output);
-    parse_spaces(&mut output);
     parse_functions(&mut output)?;
     parse_application(&mut output);
     let output = parse_remove_group(output);
-    let output = parse_macros(&definitions, output)?;
+    let output = parse_macros(definitions, output)?;
 
     Ok(output)
 }

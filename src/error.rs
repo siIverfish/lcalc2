@@ -1,4 +1,3 @@
-
 use thiserror::Error;
 
 use crate::ds::Token;
@@ -8,12 +7,15 @@ use crate::spec::MAX_RECURSION_DEPTH;
 pub enum ParserError {
     #[error("input ended, but open parentheses were still unclosed.")]
     UnclosedParentheses,
+
     #[error("input ongoing, but final end-paren occurred.")]
     ClosedParentheses,
+
     #[error("malformed function")]
     MalformedFunction,
+
     #[error("undefined macro name: {name}")]
-    UndefinedMacroName { name: String }
+    UndefinedMacroName { name: String },
 }
 
 #[derive(Error, Debug)]
@@ -29,5 +31,5 @@ pub enum Error {
     #[error("parser error: {0}")]
     Parse(#[from] ParserError),
     #[error("evaluation error: {0}")]
-    Evaluation(#[from] EvaluationError)
+    Evaluation(#[from] EvaluationError),
 }

@@ -9,6 +9,6 @@ fn main() {
 
     match run(&input) {
         Ok(result) => println!("Final result: {result}"),
-        Err(error) => println!("An error occurred: {error}")
+        Err(error) => println!("An error occurred: {error}"),
     }
 }

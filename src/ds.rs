@@ -27,7 +27,10 @@ impl Display for Token {
 }
 
 impl Token {
-    pub fn recurse_with_result(self, f: impl Fn(Token) -> Result<Token, ParserError>) -> Result<Self, ParserError> {
+    pub fn recurse_with_result(
+        self,
+        f: impl Fn(Token) -> Result<Token, ParserError>,
+    ) -> Result<Self, ParserError> {
         Ok(match self {
             Token::Application(tokens_box) => {
                 let [function, argument] = *tokens_box;
