@@ -9,7 +9,6 @@ pub mod spec;
 
 pub mod application;
 pub mod ds;
-pub mod function;
 pub mod parens;
 pub mod remove_group;
 
@@ -23,7 +22,7 @@ pub mod run;
 
 // TODO: HashMap or BTreeMap?
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, iter::Peekable, str::Chars};
 
 use ds::Token;
 use error::{Error, ParserError};
@@ -31,7 +30,6 @@ use macros::parse_macros;
 use preprocessor::preprocess;
 
 use application::parse_application;
-use function::parse_functions;
 use parens::parse_parens;
 use remove_group::parse_remove_group;
 
@@ -43,6 +41,7 @@ pub fn parse_file(input: &str) -> Result<Token, ParserError> {
     parse(&definitions, &input)
 }
 
+
 pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token, ParserError> {
     // implicit outer parens
     // TODO w/o copy - modify iterator?
@@ -50,9 +49,13 @@ pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token
 
     let mut iter = input.chars().peekable();
 
+    parse_iter(definitions, &mut iter)
+}
+
+pub fn parse_iter(definitions: &BTreeMap<String, Token>, iter: &mut Peekable<Chars>) -> Result<Token, ParserError> {
+
     // TODO refactor parse_parens to work on tokens like others
-    let mut output = parse_parens(&mut iter)?;
-    parse_functions(&mut output)?;
+    let mut output = parse_parens(definitions, iter)?;
     parse_application(&mut output);
     let output = parse_remove_group(output);
     let output = parse_macros(definitions, output)?;

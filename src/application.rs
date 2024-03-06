@@ -29,10 +29,12 @@ pub fn parse_application(token: &mut Token) {
             parse_application_tokens(tokens);
         }
         Token::Function(token_box) => {
-            let Token::Group(tokens) = &mut **token_box else {
-                unreachable!()
-            };
-            parse_application_tokens(tokens);
+            println!("{token_box:#?}");
+            parse_application(token_box.as_mut());
+            // let Token::Group(tokens) = &mut **token_box else {
+            //     unreachable!()
+            // };
+            // parse_application_tokens(tokens);
         }
         _ => {}
     }
