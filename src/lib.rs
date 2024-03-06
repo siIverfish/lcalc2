@@ -13,31 +13,20 @@ pub mod run;
 
 // TODO: HashMap or BTreeMap?
 
-use std::{collections::BTreeMap, iter::Peekable, str::Chars};
-
 use ds::Token;
 use error::{Error, ParserError};
 use preprocessor::preprocess;
 
-use parse::parse_iter;
+use parse::Parser;
 
 use run::evaluate;
 
 pub fn parse_file(input: &str) -> Result<Token, ParserError> {
     let (definitions, input) = preprocess(input)?;
 
-    parse(&definitions, &input)
-}
+    let mut parser = Parser { definitions, iter: input.chars().peekable() };
 
-
-pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token, ParserError> {
-    // implicit outer parens
-    // TODO w/o copy - modify iterator?
-    let input = format!("({})", input);
-
-    let mut iter = input.chars().peekable();
-
-    parse_iter(definitions, &mut iter)
+    parser.parse_applications()
 }
 
 pub fn run(input: &str) -> Result<Token, Error> {

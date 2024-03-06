@@ -2,8 +2,20 @@ use std::collections::BTreeMap;
 
 use crate::ds::Token;
 use crate::error::ParserError;
-use crate::parse;
+use crate::parse::Parser;
 use crate::spec::{COMMENT_SYMBOL, MACRO_DELIMITER};
+
+fn validate_parentheses(input: &str) -> bool {
+    input
+        .chars()
+        .map(|c| match c {
+            '(' => 1,
+            ')' => -1,
+            _ => 0,
+        })
+        .sum::<i32>()
+        == 0
+}
 
 // TODO: validate names (no spaces, lambdas, can't start with number)
 
@@ -26,7 +38,10 @@ pub fn preprocess(input: &str) -> Result<(BTreeMap<String, Token>, String), Pars
         .and_then(|line| line.split_once(MACRO_DELIMITER))
         .map(|(n, v)| (n.trim(), v.trim()))
     {
-        let value = parse(&definitions, value)?;
+        // this is a temporary solution. definitions will not be cloned every iteration in
+        // the future, i just have to lay down some code for mutability in
+        // the Parser struct.
+        let value = Parser::new(definitions.clone(), &value).parse_applications()?;
         definitions.insert(name.to_owned(), value);
         lines_iter.next(); // silly
     }
