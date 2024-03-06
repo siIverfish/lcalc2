@@ -20,6 +20,6 @@ pub fn parse_spaces(token: &mut Token) {
         }
         // do nothing to other tokens.
         // spaces are removed via their vec.
-        _ => {},
+        _ => {}
     }
 }

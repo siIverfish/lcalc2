@@ -1,8 +1,11 @@
 // λ
 
+#![feature(box_patterns)]
+
+pub mod macros;
 pub mod preprocessor;
 pub mod spec;
-pub mod macros;
+pub mod error;
 
 pub mod application;
 pub mod ds;
@@ -20,10 +23,15 @@ pub mod run;
 // TODO: error system improvement -- stop bubbling Err(())s
 // (pest would do this automatically)
 
-use ds::Token;
+// TODO: HashMap or BTreeMap?
 
-use preprocessor::preprocess;
+use std::collections::BTreeMap;
+
+
+use ds::Token;
+use error::{ParserError, Error};
 use macros::parse_macros;
+use preprocessor::preprocess;
 
 use application::parse_application;
 use function::parse_functions;
@@ -34,14 +42,13 @@ use spaces::parse_spaces;
 
 use run::evaluate;
 
-pub fn parse_file(input: &str) -> Result<Token, ()> {
+pub fn parse_file(input: &str) -> Result<Token, ParserError> {
     let (definitions, input) = preprocess(input)?;
 
     Ok(parse(&definitions, &input)?)
 }
 
-pub fn parse(definitions: &Vec<(String, Token)>, input: &str) -> Result<Token, ()> {
-
+pub fn parse(definitions: &BTreeMap<String, Token>, input: &str) -> Result<Token, ParserError> {
     // implicit outer parens
     // TODO w/o copy - modify iterator?
     let input = format!("({})", input);
@@ -49,23 +56,23 @@ pub fn parse(definitions: &Vec<(String, Token)>, input: &str) -> Result<Token, (
     let mut iter = input.chars().peekable();
 
     // TODO refactor parse_parens to work on tokens like others
-    let mut output = parse_parens(&mut iter).unwrap();
+    let mut output = parse_parens(&mut iter)?;
     parse_numbers(&mut output);
     parse_spaces(&mut output);
     parse_functions(&mut output)?;
-    parse_application(&mut output)?;
+    parse_application(&mut output);
     let output = parse_remove_group(output);
-    let output = parse_macros(&definitions, &output);
+    let output = parse_macros(&definitions, output)?;
 
     Ok(output)
 }
 
-pub fn run(input: &str) -> Result<Token, ()> {
+pub fn run(input: &str) -> Result<Token, Error> {
     let parsed_input = parse_file(input)?;
 
-    println!("Parsed: {:#?}", parsed_input);
+    println!("Parsed: {parsed_input} {parsed_input:#?}");
 
-    let result = evaluate(parsed_input);
+    let result = evaluate(parsed_input)?;
 
     Ok(result)
 }

@@ -1,6 +1,8 @@
+use crate::error::ParserError;
+
 use crate::ds::Token;
 
-pub fn parse_functions(tree: &mut Token) -> Result<(), ()> {
+pub fn parse_functions(tree: &mut Token) -> Result<(), ParserError> {
     match tree {
         Token::Group(tokens) => {
             // recurse to interior groups
@@ -26,7 +28,7 @@ pub fn parse_functions(tree: &mut Token) -> Result<(), ()> {
             // return Err(()) if there's nothing after after the function
             // e.g. λ1(λ)
             //          ^
-            tokens.get(index + 1).ok_or(())?;
+            tokens.get(index + 1).ok_or(ParserError::MalformedFunction)?;
 
             let next_tokens = tokens.split_off(index + 1);
             let mut next_tokens_group = Token::Group(next_tokens);

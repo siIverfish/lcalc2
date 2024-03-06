@@ -1,26 +1,14 @@
+use std::collections::BTreeMap;
 
 use crate::ds::Token;
+use crate::error::ParserError;
 
-pub fn parse_macros(definitions: &Vec<(String, Token)>, token: &Token) -> Token  {
-    match token {
-        Token::MacroName(name) => definitions
-            .iter()
-            .filter(|(k, _)| k == name)
-            .next()
-            .expect("macro not defined")
-            .1
-            .clone(),
-
-        // unimportant recursion boilerplate.
-        Token::Application(tokens_box) => {
-            let [ref function, ref argument] = **tokens_box;
-
-            Token::Application(Box::new([
-                parse_macros(definitions, function),
-                parse_macros(definitions, argument),
-            ]))
-        }
-        Token::Function(token_box) => Token::Function(Box::new(parse_macros(definitions, token_box))),
-        other => other.clone(),
-    }
+pub fn parse_macros(definitions: &BTreeMap<String, Token>, token: Token) -> Result<Token, ParserError> {
+    Ok(match token {
+        Token::MacroName(name) => match definitions.get(&name) {
+            Some(token) => token.clone(),
+            None => Err(ParserError::UndefinedMacroName { name })?,
+        },
+        other => other.recurse_with_result(|token| Ok(parse_macros(definitions, token)?))?
+    })
 }

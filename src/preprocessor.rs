@@ -1,11 +1,13 @@
-use crate::spec::*;
-use crate::ds::Token;
+use std::collections::BTreeMap;
 
+use crate::ds::Token;
+use crate::spec::{COMMENT_SYMBOL, MACRO_DELIMITER};
+use crate::error::ParserError;
 use crate::parse;
 
 // TODO: validate names (no spaces, lambdas, can't start with number)
 
-pub fn preprocess(input: &str) -> Result<(Vec<(String, Token)>, String), ()> {
+pub fn preprocess(input: &str) -> Result<(BTreeMap<String, Token>, String), ParserError> {
     // remove comments & empty lines, leaving only ':=' statements
     // and the expression
     let mut lines_iter = input
@@ -17,7 +19,7 @@ pub fn preprocess(input: &str) -> Result<(Vec<(String, Token)>, String), ()> {
 
     // process comments into a mapping
     // e.g. "one := λλ2 1" -> {"one": "λλ2 1"}
-    let mut definitions: Vec<(String, Token)> = Vec::new();
+    let mut definitions: BTreeMap<String, Token> = BTreeMap::new();
 
     while let Some((name, value)) = lines_iter
         .peek()
@@ -25,7 +27,7 @@ pub fn preprocess(input: &str) -> Result<(Vec<(String, Token)>, String), ()> {
         .map(|(n, v)| (n.trim(), v.trim()))
     {
         let value = parse(&definitions, value)?;
-        definitions.push((name.to_owned(), value));
+        definitions.insert(name.to_owned(), value);
         lines_iter.next(); // silly
     }
 

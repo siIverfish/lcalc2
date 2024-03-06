@@ -1,4 +1,33 @@
-a := (λλλ1)
+a := λλλ1
+
+0c := λλ 1
+1c := λλ 2 1
+2c := λλ 2(2 1)
+3c := λλ 2(2(2 1))
+4c := λλ 2(2(2(2 1)))
+
+F := λλ1
+T := λλ2
+
+succ := λλλ 2(3 2 1)
+
+# De Bruji indices sufficiently high as to never
+# be used are used for testing.
+PLACEBO := 3735928559
+DEBUG := 777
+
+Y := λ(λ1 1)(λ2(1 1))
+
 # comment
 # comment
-(a)(111)(222)(a)(777)(888)(a)(123)(456)(789)
+# (T)(F)(PLACEBO)(PLACEBO)(T T F)(T)(PLACEBO)(DEBUG)(PLACEBO)
+# (succ (succ 2c))(λ1)(DEBUG)
+# 
+
+# (2c)(F)(PLACEBO)(PLACEBO)
+# -> (λz.F(F(z)))(PLACEBO)(PLACEBO)(DEBUG)
+# -> F(F(PLACEBO))(PLACEBO)(DEBUG)
+# -> F I (PLACEBO)(DEBUG)
+# -> (PLACEBO)(DEBUG)
+
+(T)(DEBUG)(PLACEBO)
