@@ -14,10 +14,14 @@ pub fn evaluate(mut tree: Token) -> Result<Token, EvaluationError> {
     let mut old_trees_hashes: Vec<u64> = Vec::new();
 
     for _ in 0..MAX_RECURSION_DEPTH {
+        // dbg!(&old_trees_hashes);
+        // dbg!(&tree);
         tree = evaluate_once(tree)?;
         let new_hash = hash_token(&tree);
+        dbg!(new_hash);
 
         if old_trees_hashes.contains(&new_hash) {
+            // println!("old tree hashes contains new hash");
             return Ok(tree);
         }
 
@@ -28,6 +32,7 @@ pub fn evaluate(mut tree: Token) -> Result<Token, EvaluationError> {
 }
 
 pub fn evaluate_once(tree: Token) -> Result<Token, EvaluationError> {
+    // println!("evaluate_once argument: {}", &tree);
     match tree {
         Token::Application(tokens_box) => {
             let [function, argument] = *tokens_box;
@@ -47,14 +52,18 @@ pub fn evaluate_once(tree: Token) -> Result<Token, EvaluationError> {
             // now that its been replaced.
             // if there isn't an outer function, something has gone badly wrong.
             if let Token::Function(box new_expression) = function {
+                // dbg!(&new_expression);
                 Ok(new_expression)
             } else {
+                // println!("nonfunction predicate");
                 Err(EvaluationError::NonFunctionPredicate {
                     predicate: function,
                     argument,
                 })
+                // Ok(tree)
             }
         }
+        // Token::Function(box inner) => Ok(Token::Function(Box::new(evaluate(inner)?))),
         other => Ok(other),
     }
 }

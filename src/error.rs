@@ -19,6 +19,9 @@ pub enum ParserError {
 
     #[error("empty application -- is there a '()' in your code?")]
     EmptyApplication,
+
+    #[error("failed to read file: {0}")]
+    FileSystemError(#[from] std::io::Error)
 }
 
 #[derive(Error, Debug)]

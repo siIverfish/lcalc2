@@ -1,0 +1,12 @@
+# that's prooobably enough numbers
+0c := λλ 1
+1c := λλ 2 1
+2c := λλ 2(2 1)
+3c := λλ 2(2(2 1))
+4c := λλ 2(2(2(2 1)))
+
+succ := λλλ2(321)
+S := succ
+
+mul := λλλ(3 1)(2 1)
+M := mul
