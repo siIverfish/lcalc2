@@ -44,14 +44,18 @@ impl<'a> Parser<'a> {
 }
 
 impl Parser<'_> {
-    pub fn parse_applications(&mut self) -> ParserItem {
+    pub fn parse_applications(&mut self, consume_closeparen: bool) -> ParserItem {
         let mut token = self.next_iter()?;
     
         // keep consuming next tokens and adding them as arguments
         // left-associative function calling
         while let Ok(next_token) = self.next_iter() {
+            dbg!(self.iter.peek());
             dbg!(&next_token);
-            token = Token::Application(Box::new([token, next_token]))
+            token = Token::Application(Box::new([token, next_token]));
+            if !consume_closeparen && self.iter.peek() == Some(&')') {
+                break;
+            }
         }
     
         Ok(token)
@@ -105,14 +109,14 @@ impl Parser<'_> {
 
         match self.iter.next().ok_or(ParserError::ClosedParentheses)? {
             // open parentheses: build out token group
-            '(' => self.parse_applications(),
+            '(' => self.parse_applications(true),
             // close an open token group
             ')' => Err(ParserError::ClosedParentheses),
             // just make a function with everything after it
             'λ' => Ok(
                 Token::Function(
                     Box::new(
-                        self.next_iter()?
+                        self.parse_applications(false)?
                     )
                 )
             ),

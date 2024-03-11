@@ -29,7 +29,7 @@ pub fn parse_file(path: &Path) -> Result<Token, ParserError> {
 
     let mut parser = Parser::with_definition_and_input(definitions, &input);
 
-    parser.parse_applications()
+    parser.parse_applications(true)
 }
 
 pub fn run(path: &Path) -> Result<Token, Error> {

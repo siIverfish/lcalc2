@@ -65,7 +65,7 @@ pub fn preprocess(path: &Path) -> Result<(BTreeMap<String, Token>, String), Pars
         } else {
             // this is a variable declaration
             parser = parser.add_input(value);
-            let value = parser.parse_applications()?;
+            let value = parser.parse_applications(true)?;
             parser.definitions.insert(name.to_owned(), value);
         }
         
@@ -74,6 +74,9 @@ pub fn preprocess(path: &Path) -> Result<(BTreeMap<String, Token>, String), Pars
 
     // now, the remaining lines must be the "expression" of the file.
     let expression: String = lines_iter.collect();
+
+    dbg!(&expression);
+    println!("{expression:#?}");
 
     Ok((parser.definitions, expression))
 }
