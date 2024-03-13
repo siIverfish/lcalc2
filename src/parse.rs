@@ -1,16 +1,14 @@
 use core::iter::Peekable;
 use std::collections::BTreeMap;
-use std::path::Iter;
 
-use crate::ds::Token;
+use crate::ds::{FlatToken, Token};
 use crate::error::ParserError;
-use crate::spec::RESERVED;
 
 type ParserItem = Result<Token, ParserError>;
 
 pub struct Parser<'a> {
     pub definitions: BTreeMap<String, Token>,
-    pub iter: Peekable<Box<dyn Iterator<Item = char> + 'a>>
+    pub iter: Peekable<Box<dyn Iterator<Item = FlatToken> + 'a>>
 }
 
 impl<'a> Parser<'a> {
@@ -18,25 +16,25 @@ impl<'a> Parser<'a> {
         Parser{ 
             definitions: BTreeMap::new(), 
             iter: (
-                Box::new(std::iter::empty::<char>()) 
-                as Box<dyn Iterator<Item = char>>
+                Box::new(std::iter::empty::<FlatToken>()) 
+                as Box<dyn Iterator<Item = FlatToken>>
             ).peekable()
         }
     }
 
-    pub fn with_definition_and_input(definitions: BTreeMap<String, Token>, input: &'a str) -> Self {
+    pub fn with_definition_and_input(definitions: BTreeMap<String, Token>, input: Vec<FlatToken>) -> Self {
         Parser{ 
             definitions,
             iter: (
-                Box::new(input.chars()) 
-                as Box<dyn Iterator<Item = char>>
+                Box::new(input.into_iter()) 
+                as Box<dyn Iterator<Item = FlatToken>>
             ).peekable()
         }
     }
 
-    pub fn add_input<'b: 'a>(mut self, input: &'b str) -> Self {
-        let new_iter = self.iter.chain(input.chars());
-        let boxed = Box::new(new_iter) as Box<dyn Iterator<Item = char>>;
+    pub fn add_input<'b: 'a>(mut self, input: Vec<FlatToken>) -> Self {
+        let new_iter = self.iter.chain(input.into_iter());
+        let boxed = Box::new(new_iter) as Box<dyn Iterator<Item = FlatToken>>;
 
         self.iter = boxed.peekable();
         self
@@ -53,7 +51,7 @@ impl Parser<'_> {
             dbg!(self.iter.peek());
             dbg!(&next_token);
             token = Token::Application(Box::new([token, next_token]));
-            if !consume_closeparen && self.iter.peek() == Some(&')') {
+            if !consume_closeparen && self.iter.peek() == Some(&FlatToken::CloseParen) {
                 break;
             }
         }
@@ -61,23 +59,23 @@ impl Parser<'_> {
         Ok(token)
     }
 
-    fn parse_character(&mut self, starting_character: char) -> Result<Token, ParserError> {
-        let mut name: String = String::from(starting_character);
+    // fn parse_character(&mut self, starting_character: char) -> Result<Token, ParserError> {
+    //     let mut name: String = String::from(starting_character);
     
-        while let Some(next_char) = self.iter.peek().filter(|c| !RESERVED.contains(**c)) {
-            name.push(*next_char);
-            self.iter.next();
-        }
+    //     while let Some(next_char) = self.iter.peek().filter(|c| !RESERVED.contains(**c)) {
+    //         name.push(*next_char);
+    //         self.iter.next();
+    //     }
     
-        Ok(if let Ok(num) = str::parse::<u32>(&name) {
-            Token::Name(num)
-        } else {
-            self.definitions
-                .get(&name)
-                .ok_or(ParserError::UndefinedMacroName { name })?
-                .clone()
-        })
-    }
+    //     Ok(if let Ok(num) = str::parse::<u32>(&name) {
+    //         Token::Name(num)
+    //     } else {
+    //         self.definitions
+    //             .get(&name)
+    //             .ok_or(ParserError::UndefinedMacroName { name })?
+    //             .clone()
+    //     })
+    // }
 
     fn next_iter(&mut self) -> ParserItem {
         // self.iter.next().and_then(|character| {
@@ -109,24 +107,25 @@ impl Parser<'_> {
 
         match self.iter.next().ok_or(ParserError::ClosedParentheses)? {
             // open parentheses: build out token group
-            '(' => self.parse_applications(true),
+            FlatToken::OpenParen => self.parse_applications(true),
             // close an open token group
-            ')' => Err(ParserError::ClosedParentheses),
+            FlatToken::CloseParen => Err(ParserError::ClosedParentheses),
             // just make a function with everything after it
-            'λ' => Ok(
-                Token::Function(
-                    Box::new(
-                        self.parse_applications(false)?
+            FlatToken::Lambda => {
+                self.iter.next();
+                Ok(
+                    Token::Function(
+                        Box::new(
+                            self.parse_applications(false)?
+                        )
                     )
                 )
-            ),
-            // skip whitespace
-            // hopefully the recursion gets optimized out
-            c if c.is_whitespace() => self.next_iter(),
-            // construct MacroName / Name out of character
-            c => self.parse_character(c),
-            // bad error - this means parser needed more, but input ended.
-            // will propagate and be shown to end user.
+            },
+            FlatToken::MacroName(name) => self.definitions
+                .get(&name)
+                .cloned()
+                .ok_or(ParserError::UndefinedMacroName { name }),
+            FlatToken::Name(number) => Ok(Token::Name(number)),
         }
     }
 }

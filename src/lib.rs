@@ -8,6 +8,7 @@ pub mod spec;
 
 pub mod ds;
 pub mod parse;
+pub mod preparser;
 
 pub mod run;
 
@@ -24,10 +25,14 @@ use parse::Parser;
 
 use run::evaluate;
 
+pub use preparser::preparse;
+
 pub fn parse_file(path: &Path) -> Result<Token, ParserError> {
     let (definitions, input) = preprocess(path)?;
 
-    let mut parser = Parser::with_definition_and_input(definitions, &input);
+    let input = preparse(&input);
+
+    let mut parser = Parser::with_definition_and_input(definitions, input);
 
     parser.parse_applications(true)
 }

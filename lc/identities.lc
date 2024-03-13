@@ -6,4 +6,8 @@
 PLACEBO := 3735928559
 DEBUG := 777
 
-1c (λ1) DEBUG
+succ 4c (λ1) DEBUG
+
+
+
+# a b c -> ((a b) c)

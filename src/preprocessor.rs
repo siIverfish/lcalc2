@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use crate::ds::Token;
 use crate::error::ParserError;
 use crate::parse::Parser;
+use crate::preparse;
 use crate::spec::{COMMENT_SYMBOL, MACRO_DELIMITER};
 
 // will use for multiline macro defininitions
@@ -63,7 +64,8 @@ pub fn preprocess(path: &Path) -> Result<(BTreeMap<String, Token>, String), Pars
                 parser.definitions.insert(other_name, other_value);
             }
         } else {
-            // this is a variable declaration
+            // this is a variable declaration 
+            let value = preparse(value);
             parser = parser.add_input(value);
             let value = parser.parse_applications(true)?;
             parser.definitions.insert(name.to_owned(), value);

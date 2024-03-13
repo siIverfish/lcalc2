@@ -11,6 +11,15 @@ pub enum Token {
     Application(Box<[Token; 2]>),
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Hash, Ord, PartialOrd)]
+pub enum FlatToken {
+    OpenParen,
+    CloseParen,
+    Lambda,
+    Name(u32),
+    MacroName(String)
+}
+
 use std::fmt::Display;
 
 impl Display for Token {
